@@ -1,0 +1,441 @@
+<!-- File: index.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>グラフ作りmath | 数式でグラフを作るパズルゲーム</title>
+  <meta name="description" content="数式やスライダーでグラフを作って目標に重ねるパズルゲーム。数式ドロップ、ボールころがし、自作ステージを友だちと共有できます。">
+  <meta name="theme-color" content="#0b1120">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="グラフ作りmath">
+  <meta property="og:description" content="数式でグラフを作って重ねるパズルゲーム。数式を落としたり、ボールを転がしたり。自作ステージで友だちと勝負しよう。">
+  <meta property="og:locale" content="ja_JP">
+  <meta name="twitter:card" content="summary">
+  <!--
+    公開URLが決まったら、tools/og-image.html で og.png を作ってルートに置き、
+    次の3行を有効にして URL を書きかえてください（twitter:card は上の行を削除）。
+    <meta property="og:url" content="https://ユーザー名.github.io/リポジトリ名/">
+    <meta property="og:image" content="https://ユーザー名.github.io/リポジトリ名/og.png">
+    <meta name="twitter:card" content="summary_large_image">
+  -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <button class="brand" id="btn-home" type="button">📈 グラフ作りmath</button>
+    <button class="icon-btn" id="btn-mute" type="button" aria-label="サウンドの切り替え">🔊</button>
+  </header>
+
+  <main>
+    <section id="screen-menu" class="screen active">
+      <p class="lead">ステージを作って、ワールドにまとめて、リンクやファイルで配ろう。受け取ったワールドは、ここから遊べます。</p>
+
+      <div class="mode-cards">
+        <button class="mode-card" type="button" data-action="editor">
+          <span class="mode-title">🛠 ステージをつくる</span>
+          <span class="mode-desc">スライダー、ドロップ、数式、数式ドロップ、ボールころがし（ギミックつき）のステージを作ります。</span>
+        </button>
+        <button class="mode-card" type="button" data-action="world">
+          <span class="mode-title">🌍 ワールドをつくる</span>
+          <span class="mode-desc">作ったステージを並べて問題文をつけ、ひとつのリンクやファイルで配ります。</span>
+        </button>
+      </div>
+
+      <div class="name-row">
+        <label for="menu-name">ニックネーム</label>
+        <input id="menu-name" type="text" maxlength="16" placeholder="ななし" autocomplete="off">
+      </div>
+
+      <h2>📥 受け取ったリンク・ファイルを開く</h2>
+      <div class="open-row">
+        <input id="open-input" type="text" placeholder="リンクまたはコードを貼りつけ" autocomplete="off" spellcheck="false" aria-label="リンクまたはコード">
+        <button type="button" id="btn-open" class="primary">開く</button>
+      </div>
+      <label class="file-label">
+        <span>ワールドのファイル（.json）を開く：</span>
+        <input id="open-file" type="file" accept=".json,application/json">
+      </label>
+
+      <h2>🌍 マイワールド</h2>
+      <div id="my-worlds" class="my-stages"></div>
+
+      <h2>📚 サンプルワールド</h2>
+      <p class="track-desc">教材の例です。そのまま遊ぶことも、コピーして自分のワールドの土台にすることもできます。</p>
+      <div id="sample-worlds" class="my-stages"></div>
+
+      <details class="help">
+        <summary>使い方・数式の書き方</summary>
+        <div class="help-body">
+          <p>作る人：「ステージをつくる」でステージを作って保存し、「ワールドをつくる」で並べます。ステージごとに問題文をつけられます。リンクを送るか、ファイルに書き出して配ります。</p>
+          <p>遊ぶ人：リンクを開くか、上の欄にリンクやコードを貼りつけるか、ファイルを開きます。遊んだワールドは「マイワールド」に残り、続きから遊べます。「記録をコピー」で提出用のテキストを作れます。</p>
+          <p>記録は使っているブラウザの中だけに保存されます。別の端末やブラウザには引きつがれません。</p>
+          <p>ボールのステージは、作った人が自分でクリアする「クリアチェック」をしてから保存したものだけ配れます。</p>
+          <p>表示範囲は −10 ≤ x ≤ 10、−10 ≤ y ≤ 10 です。</p>
+          <p>使える記号：<code>+ - * / ^ ( )</code> 絶対値：<code>|x - 2|</code> または <code>abs(x - 2)</code></p>
+          <p>関数：<code>sin cos tan abs sqrt exp ln log</code>（log は常用対数、ln は自然対数） 定数：<code>pi e</code></p>
+          <p>掛け算の記号は省略できます：<code>2x</code>、<code>3sin(x)</code>、<code>(x+1)(x-2)</code>、<code>x^2</code>、<code>√x</code></p>
+        </div>
+      </details>
+    </section>
+
+    <section id="screen-stage" class="screen">
+      <div class="hud">
+        <div class="hud-title">
+          <span id="stage-label"></span>
+          <span id="stage-name" class="tag"></span>
+        </div>
+        <div class="hud-right">
+          <span class="par" id="stage-par"></span>
+          <span class="hud-time">⏱ <span id="stage-time">0.0</span>秒</span>
+        </div>
+      </div>
+      <div class="meter" aria-label="一致率">
+        <div class="meter-bar" id="stage-meter-bar"></div>
+        <span id="stage-meter-text">0.0%</span>
+      </div>
+      <div class="play-area">
+        <div class="canvas-wrap">
+          <canvas id="stage-canvas" class="draggable" aria-label="目標グラフとあなたのグラフ"></canvas>
+          <div class="legend"><span class="t">━ 目標</span><span class="p">━ あなた（ドラッグで移動）</span></div>
+        </div>
+        <div class="panel">
+          <p class="coach" id="stage-coach" hidden>👆 オレンジのグラフをドラッグするか、スライダーを動かして青いグラフに重ねよう</p>
+          <div class="template" id="stage-template"></div>
+          <div class="current" id="stage-current"></div>
+          <div id="sliders" class="sliders"></div>
+          <p class="hint-text" id="stage-hint"></p>
+          <div class="btn-row">
+            <button type="button" id="btn-hint">💡 ヒント</button>
+            <button type="button" id="btn-reset">↺ リセット</button>
+            <button type="button" id="btn-stage-back">一覧へ</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-lab" class="screen">
+      <div class="hud">
+        <div class="hud-title">
+          <span id="lab-title"></span>
+          <span id="lab-name" class="tag"></span>
+        </div>
+        <div class="hud-right">
+          <span class="par" id="lab-par"></span>
+          <span class="hud-time" id="lab-attempts"></span>
+        </div>
+      </div>
+      <div class="play-area">
+        <div class="canvas-wrap">
+          <canvas id="lab-canvas" aria-label="数式ラボのグラフ"></canvas>
+          <div class="legend" id="lab-legend"></div>
+          <div class="banner" id="lab-banner" hidden></div>
+        </div>
+        <div class="panel">
+          <p class="template" id="lab-goal"></p>
+          <p class="hint-text" id="lab-hint"></p>
+          <div class="field" id="lab-start-field" hidden>
+            <span class="field-label">ボールを落とす位置（グラフ上のドラッグでも動かせます）</span>
+            <div class="start-row">
+              <label for="lab-start">x</label>
+              <input type="range" id="lab-start" min="-9.5" max="9.5" step="0.5">
+              <output id="lab-start-out">0</output>
+            </div>
+          </div>
+          <div id="lab-inputs" class="lab-inputs"></div>
+          <p class="error" id="lab-error" role="alert"></p>
+          <div class="keypad" id="lab-keypad">
+            <button type="button" data-insert="x">x</button>
+            <button type="button" data-insert="^">^</button>
+            <button type="button" data-insert="(">(</button>
+            <button type="button" data-insert=")">)</button>
+            <button type="button" data-back="1" aria-label="1文字削除">⌫</button>
+            <button type="button" data-insert="sin(">sin</button>
+            <button type="button" data-insert="cos(">cos</button>
+            <button type="button" data-insert="|">|</button>
+            <button type="button" data-insert="sqrt(">√</button>
+            <button type="button" data-insert="/">/</button>
+          </div>
+          <p class="lab-status" id="lab-status"></p>
+          <div class="btn-row">
+            <button type="button" id="btn-lab-go" class="primary">⤓ 落とす（Enter）</button>
+            <button type="button" id="btn-lab-quit">やめる</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-drop" class="screen">
+      <div class="hud">
+        <div class="hud-title">
+          <span id="drop-title">⤓ ドロップ</span>
+          <span id="drop-level" class="tag"></span>
+        </div>
+        <div class="hud-right">
+          <span class="lives" id="drop-lives"></span>
+          <span class="hud-time" id="drop-score"></span>
+        </div>
+      </div>
+      <div class="play-area">
+        <div class="canvas-wrap">
+          <canvas id="drop-canvas" class="draggable" aria-label="落ちてくるグラフと目標グラフ"></canvas>
+          <div class="legend"><span class="t">━ 目標</span><span class="p">━ あなた</span><span class="g">┅ 着地予想</span></div>
+          <div class="banner" id="drop-banner" hidden></div>
+        </div>
+        <div class="panel">
+          <p class="template" id="drop-template"></p>
+          <div class="current" id="drop-current"></div>
+          <div id="drop-sliders" class="sliders"></div>
+          <p class="hint-text">グラフは目標に触れた瞬間に着地します。一致率90%以上で成功です。<br>キーボード：↑↓ でパラメータを選ぶ、←→ で値を変える、Space で落とす。グラフは左右にドラッグできます。</p>
+          <div class="btn-row">
+            <button type="button" id="btn-drop-hard" class="primary">⤓ 落とす（Space）</button>
+            <button type="button" id="btn-drop-quit">やめる</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-formula" class="screen">
+      <div class="hud">
+        <div class="hud-title">
+          <span id="formula-mode"></span>
+          <span id="formula-round"></span>
+          <span id="formula-tier" class="tag"></span>
+        </div>
+        <div class="hud-right">
+          <span class="par" id="formula-rec"></span>
+          <span class="hud-time" id="formula-score"></span>
+        </div>
+      </div>
+      <div class="play-area">
+        <div class="canvas-wrap">
+          <canvas id="formula-canvas" aria-label="目標グラフとあなたのグラフ"></canvas>
+          <div class="legend"><span class="t">━ 目標</span><span class="p">━ あなた</span></div>
+        </div>
+        <div class="panel">
+          <p class="template">目標グラフ（青）と同じになる式を入力してください。判定は1問につき1回です。</p>
+          <label class="formula-input">
+            <span>y =</span>
+            <input id="formula-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例: 2sin(x) + 1">
+          </label>
+          <p class="error" id="formula-error" role="alert"></p>
+          <div class="keypad" id="keypad">
+            <button type="button" data-insert="x">x</button>
+            <button type="button" data-insert="^">^</button>
+            <button type="button" data-insert="(">(</button>
+            <button type="button" data-insert=")">)</button>
+            <button type="button" data-back="1" aria-label="1文字削除">⌫</button>
+            <button type="button" data-insert="sin(">sin</button>
+            <button type="button" data-insert="cos(">cos</button>
+            <button type="button" data-insert="abs(">abs</button>
+            <button type="button" data-insert="sqrt(">√</button>
+            <button type="button" data-insert="/">/</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="btn-submit" class="primary">判定する（Enter）</button>
+            <button type="button" id="btn-formula-quit">やめる</button>
+          </div>
+          <div class="result" id="formula-result" hidden>
+            <div class="verdict" id="result-verdict"></div>
+            <div class="score" id="result-score"></div>
+            <div class="answer" id="result-answer"></div>
+            <button type="button" id="btn-next" class="primary">次の問題へ</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-editor" class="screen">
+      <div class="hud">
+        <div class="hud-title"><span>🛠 ステージを作る</span></div>
+      </div>
+      <div class="play-area">
+        <div class="canvas-wrap">
+          <canvas id="editor-canvas" class="draggable" aria-label="作成中のステージ"></canvas>
+          <div class="legend"><span class="t" id="editor-legend">━ 目標（ドラッグで移動）</span></div>
+        </div>
+        <div class="panel">
+          <div class="field">
+            <span class="field-label">遊び方</span>
+            <div class="seg" id="editor-type" role="group" aria-label="遊び方">
+              <button type="button" data-type="slider">🎚 スライダー</button>
+              <button type="button" data-type="drop">⤓ ドロップ</button>
+              <button type="button" data-type="formula">✏️ 数式</button>
+              <button type="button" data-type="fdrop">🧪 数式ドロップ</button>
+              <button type="button" data-type="ball">● ボール</button>
+            </div>
+            <p class="hint-text" id="editor-type-desc"></p>
+          </div>
+          <label class="field" id="editor-family-field">
+            <span class="field-label">グラフの形</span>
+            <select id="editor-family"></select>
+          </label>
+          <div id="editor-sliders" class="sliders"></div>
+          <div class="field" id="editor-formula-field" hidden>
+            <span class="field-label">目標の式</span>
+            <label class="formula-input">
+              <span>y =</span>
+              <input id="editor-formula" type="text" maxlength="80" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="例: 2sin(x) + 0.1x^2">
+            </label>
+          </div>
+          <div class="field" id="editor-ball-field" hidden>
+            <span class="field-label">配置する物（クリック／ドラッグ。キャンバスを選ぶと矢印キーと Enter でも置けます）</span>
+            <div class="seg tools" id="editor-tool" role="group" aria-label="配置する物">
+              <button type="button" data-tool="start">● スタート</button>
+              <button type="button" data-tool="goal">▢ ゴール</button>
+              <button type="button" data-tool="wall">■ ブロック</button>
+              <button type="button" data-tool="hazard">▲ トゲ</button>
+              <button type="button" data-tool="swblock">◧ ON/OFF</button>
+              <button type="button" data-tool="switch">◉ スイッチ</button>
+              <button type="button" data-tool="spring">⇑ バネ</button>
+              <button type="button" data-tool="wind">≋ 風</button>
+              <button type="button" data-tool="warp">◎ ワープ</button>
+              <button type="button" data-tool="coin">🪙 コイン</button>
+              <button type="button" data-tool="erase">✕ 消す</button>
+            </div>
+            <label class="field" id="editor-opt-field" hidden>
+              <span class="field-label" id="editor-opt-label"></span>
+              <select id="editor-opt"></select>
+            </label>
+            <p class="hint-text" id="editor-tool-desc"></p>
+            <label class="field">
+              <span class="field-label">式の数</span>
+              <select id="editor-segs">
+                <option value="1">1つ（全体で1つの式）</option>
+                <option value="2">2つ（x &lt; 0 と x ≥ 0）</option>
+                <option value="3">3つ（x &lt; −3、−3 ≤ x &lt; 3、x ≥ 3）</option>
+              </select>
+            </label>
+            <label class="check"><input type="checkbox" id="editor-range"> プレイヤーが投下位置を選べる（スタートの左右4マス）</label>
+            <p class="hint-text" id="editor-ball-info"></p>
+            <p class="hint-text">キーボード：矢印キーでカーソル移動（Shift で2マス）、Enter で配置（ブロック類は2回押して範囲を決める）、Delete で消す、Esc で取り消し。</p>
+            <div class="btn-row">
+              <button type="button" id="btn-editor-clear-ball">配置をすべて消す（スタートとゴール以外）</button>
+            </div>
+          </div>
+          <label class="field">
+            <span class="field-label">ステージ名</span>
+            <input id="editor-name" type="text" maxlength="24" placeholder="ななしのステージ" autocomplete="off">
+          </label>
+          <label class="field">
+            <span class="field-label">作者名（ニックネーム）</span>
+            <input id="editor-author" type="text" maxlength="16" placeholder="ななし" autocomplete="off">
+          </label>
+          <p class="error" id="editor-error" role="alert"></p>
+          <div class="btn-row">
+            <button type="button" id="btn-editor-random">🎲 おまかせ</button>
+            <button type="button" id="btn-editor-test">▶ テストプレイ</button>
+            <button type="button" id="btn-editor-save">💾 保存</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="btn-editor-share" class="primary">🔗 リンクを作って送る</button>
+            <button type="button" id="btn-editor-world">🌍 ワールドづくりへ</button>
+            <button type="button" id="btn-editor-back">メニューへ</button>
+          </div>
+        </div>
+      </div>
+      <h2>マイステージ</h2>
+      <div id="my-stages" class="my-stages"></div>
+    </section>
+
+    <section id="screen-world" class="screen">
+      <div class="hud">
+        <div class="hud-title"><span>🌍 ワールドを作る</span></div>
+      </div>
+      <div class="world-grid">
+        <div class="panel">
+          <label class="field">
+            <span class="field-label">ワールド名</span>
+            <input id="we-name" type="text" maxlength="24" placeholder="ななしのワールド" autocomplete="off">
+          </label>
+          <label class="field">
+            <span class="field-label">説明・ねらい（任意・200文字まで）</span>
+            <textarea id="we-desc" rows="3" maxlength="200" placeholder="例：一次関数の傾きと切片を読み取る練習です。"></textarea>
+          </label>
+          <label class="field">
+            <span class="field-label">作者名（ニックネーム）</span>
+            <input id="we-author" type="text" maxlength="16" placeholder="ななし" autocomplete="off">
+          </label>
+          <div class="field">
+            <span class="field-label">マイステージから追加</span>
+            <div class="open-row">
+              <select id="we-pick" aria-label="追加するステージ"></select>
+              <button type="button" id="btn-we-add">＋ 追加</button>
+            </div>
+            <div class="btn-row">
+              <button type="button" id="btn-we-new-stage">🛠 新しいステージを作る</button>
+            </div>
+          </div>
+          <p class="error" id="we-error" role="alert"></p>
+          <div class="btn-row">
+            <button type="button" id="btn-we-test">▶ ためし遊び</button>
+            <button type="button" id="btn-we-save">💾 保存</button>
+            <button type="button" id="btn-we-reset">🗑 新規作成</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" id="btn-we-share" class="primary">🔗 リンクを作って送る</button>
+            <button type="button" id="btn-we-export">📥 ファイルに書き出す（.json）</button>
+            <button type="button" id="btn-we-back">メニューへ</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="hud">
+            <span class="field-label">収録ステージ</span>
+            <span class="par" id="we-count">0 / 20 ステージ</span>
+          </div>
+          <div id="we-list" class="we-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-worldplay" class="screen">
+      <div class="hud">
+        <div class="hud-title">
+          <span id="wp-title"></span>
+          <span id="wp-by" class="tag"></span>
+        </div>
+        <div class="hud-right">
+          <span class="hud-time" id="wp-progress"></span>
+        </div>
+      </div>
+      <div class="panel">
+        <p class="world-desc" id="wp-desc"></p>
+        <div class="btn-row">
+          <button type="button" id="btn-wp-continue" class="primary">▶ つづきから</button>
+          <button type="button" id="btn-wp-report">📋 記録をコピー</button>
+          <button type="button" id="btn-wp-share">🔗 このワールドを共有</button>
+          <button type="button" id="btn-wp-back">メニューへ</button>
+        </div>
+        <div id="wp-list" class="wp-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-box">
+      <h2 id="modal-title"></h2>
+      <div id="modal-body"></div>
+      <div class="btn-row" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/parser.js"></script>
+  <script src="js/match.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/puzzles.js"></script>
+  <script src="js/share.js"></script>
+  <script src="js/graph.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/stage.js"></script>
+  <script src="js/formula.js"></script>
+  <script src="js/drop.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/lab.js"></script>
+  <script src="js/world.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
